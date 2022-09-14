@@ -1,7 +1,10 @@
 require('../node_modules/skeleton-framework/dist/skeleton.min.css');
+require('./styles.css');
+require('process');
 
 let AUTHRORIZED = false;
-const API_BASE_URL = 'http://localhost:8000'; // TODO: Fix prod and dev environments
+const API_BASE_URL = process.env.API_BASE_URL;
+console.log(API_BASE_URL);
 
 // Utility functions
 const getToken = () => {
@@ -334,7 +337,6 @@ const createTournament = (e, args=null) => {
 
     if (args && args['competitors']) {
       for (let w = 0; w < args['competitors'].length; w++) {
-        console.log(args['tournament']);
         args['tournament'] = jsonData;
         args['jsonBody'] = {'name': args['competitors'][w].name, 'tournament_id': jsonData.id};
         createCompetitor(args);
@@ -353,9 +355,7 @@ const createTournament = (e, args=null) => {
 
 // Update Tournament
 const updateTournament = (args) => {
-  console.log("IN UPDATE TOURNAMENT");
   const jsonBody = args['jsonBody'];
-  console.log(jsonBody);
   return fetch(`${API_BASE_URL}/tournaments`, {
     method: 'PUT',
     mode: 'cors',
@@ -389,10 +389,8 @@ const getCompetitors = (args) => {
     // If creating a new tournament as a tie breaker then this is the new tournament id
     tournamentId = args['jsonBody']['tournament_id'];
     args['tournament']['complete'] = false; // so correct button group shows
-    console.log('new tournament id in getCompetitors')
   } else {
     // Current Tournament id
-    console.log(args['tournament']);
     tournamentId = args['tournament'].id;
   }
   const tournamentButtonGroup = document.getElementById('tournamentGroup');
@@ -517,8 +515,7 @@ const createCompetitor = (args) => {
     jsonBody = JSON.stringify(args['jsonBody']);
     tournamentId = args['jsonBody']['tournament_id'];
   }
-  // console.log(jsonBody);
-  console.log(tournamentId);
+
   fetch(`${API_BASE_URL}/competitors`, {
     method: 'POST',
     mode: 'cors',
@@ -559,17 +556,13 @@ const createCompetitor = (args) => {
 
 // Match competitors in tournament
 const matchCompetitors = (args) => {
-  console.log("Match Competitors");
-  console.log(args);
   let tournamentId = null;
   if (args['newTournamentId']) {
     tournamentId = args['newTournamentId'];
-    console.log('newId');
   } else {
     tournamentId = args['tournament'].id;
-    console.log('old id');
   }
-  console.log(tournamentId);
+
   fetch(`${API_BASE_URL}/matches/match_competitors?tournament_id=${tournamentId}`, {
     method: 'GET',
     mode: 'cors',
@@ -590,10 +583,7 @@ const matchCompetitors = (args) => {
     }
   })
   .then(jsonData => {
-    console.log(jsonData);
     if (jsonData.length == 0) {
-      console.log("HEEERERERE");
-      console.log(args['tournament']);
       const obj =  {
         'id': args['tournament'].id,
         'name': args['tournament'].name,
@@ -603,7 +593,6 @@ const matchCompetitors = (args) => {
         'complete': true
       }
       args['jsonBody'] = obj;
-      console.log('From matchCompetitors');
       updateTournament(args);
       setTimeout(onNavigate('/result', args), 10000);
     } else {
@@ -794,7 +783,6 @@ const competitorComponent = (competitor, index, args) => {
 
 // displayMatch
 const displayMatch = (index, args) => {
-  console.log(args);
   const match = args['matches'][index];
   if (args['tournament']) {
     const obj =  {
@@ -806,7 +794,6 @@ const displayMatch = (index, args) => {
       'complete': false
     }
     args['jsonBody'] = obj;
-    console.log('FROM display match');
     updateTournament(args);
   }
   
@@ -853,10 +840,8 @@ const displayMatch = (index, args) => {
 }
 
 const getMatchingCompetitorById = (compId, compList) => {
-  console.log(compId, compList);
   for (let k = 0; k < compList.length; k++) {
     if (compList[k]['id'] == compId) {
-      console.log(`Matched: ${compList[k]}`);
       return compList[k];
     }
   }
@@ -891,8 +876,6 @@ const displayResult = (args) => {
     }
   })
   .then(jsonData => {
-    console.log('In display Result');
-    console.log(jsonData);
     const resultMap = {};
     const competitors = args['competitors'];
     const container = document.getElementById('container');
@@ -902,7 +885,6 @@ const displayResult = (args) => {
       const loser = getMatchingCompetitorById(jsonData[i].loser_id, competitors);
       if (winner) {
         const winnerId = winner['id'];
-        // console.log(winner['name']);
         if (!resultMap[winnerId]) {
           resultMap[winnerId] = {
             'name': winner['name'],
@@ -910,16 +892,12 @@ const displayResult = (args) => {
             'losses': 0
           }
         } else {
-          console.log(`Previous wins: ${resultMap[winnerId]['wins']}`);
           ++resultMap[winnerId]['wins'];
-          // console.log(`Updated wins: ${resultMap[winnerId]['wins']}`);
         }
         if (resultMap[winnerId]['wins'] > maxWinsInt) {
           maxWinsInt = resultMap[winner['id']]['wins'];
-          // console.log(`Max Wins: ${maxWinsInt}`);
         }
 
-        // console.log(loser['name']);
         const loserId = loser['id'];
         if (!resultMap[loserId]) {
           resultMap[loserId] = {
@@ -932,8 +910,6 @@ const displayResult = (args) => {
         }
       }
     }
-    // console.log('Result Map:');
-    // console.log(resultMap);
     let winners = [];
     const tableContainer = document.createElement('div');
     tableContainer.classList.add('list-container');
@@ -1118,12 +1094,6 @@ const onNavigate = (path, args={}) => {
 
   clearPage();
 
-  window.history.pushState(
-    {},
-    path,
-    window.location.origin + path
-  );
-
   if (path == '/login') {
     if (getAuthState()) {
       onNavigate('/home');
@@ -1138,6 +1108,7 @@ const onNavigate = (path, args={}) => {
     }
   } else if (path == '/home') {
     if (getAuthState()) {
+      
       home(root);
     } else {
       window.history.pushState({}, path, '');
@@ -1202,7 +1173,7 @@ const renderNav = () => {
 const navButton = (text, route) => {
   const backButton = document.createElement('button');
   backButton.textContent = text;
-  backButton.addEventListener('click', e => onNavigate(route));
+  backButton.addEventListener('click', () => onNavigate(route));
   return backButton;
 }
 
@@ -1322,5 +1293,5 @@ let component = () => {
     onNavigate('');
     return root;
   }
-  
+
   document.body.appendChild(component());
