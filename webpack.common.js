@@ -32,7 +32,9 @@ module.exports = {
     new webpack.ProvidePlugin({
       process: 'process/browser',
     }),
-    new webpack.EnvironmentPlugin(['API_BASE_URL']),
+    new webpack.EnvironmentPlugin({
+      'API_BASE_URL': 'http://localhost:8000'
+    }),
   ],
   output: {
     filename: '[name].bundle.js',
