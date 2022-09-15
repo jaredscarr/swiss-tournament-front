@@ -18,7 +18,7 @@
   "scripts": {
     "start": "export $(cat .env | xargs) && webpack serve --open --config webpack.dev.js",
     "start-prod": "export $(cat .env | xargs) && webpack serve --open --config webpack.prod.js",
-    "build": "export $(cat .env | xargs) && webpack --config webpack.prod.js",
+    "build": "webpack --config webpack.prod.js",
     "watch": "webpack watch"
   },
   "private": true
